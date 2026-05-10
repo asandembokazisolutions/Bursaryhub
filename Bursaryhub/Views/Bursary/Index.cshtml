@@ -1,0 +1,159 @@
+@model IEnumerable<BursaryHub.Models.Bursary>
+@{
+    ViewData["Title"] = "Browse Bursaries";
+    var search  = (BursaryHub.Models.ViewModels.BursarySearchViewModel)ViewBag.Search;
+    var applied = (HashSet<int>)ViewBag.Applied;
+    int total   = (int)ViewBag.Total;
+    int pageSize = (int)ViewBag.PageSize;
+    int pages   = (int)Math.Ceiling((double)total / pageSize);
+}
+
+<h3 class="fw-bold mb-3"><i class="bi bi-search me-2 text-primary"></i>Browse Bursaries <span class="fs-5 text-muted fw-normal">(@total found)</span></h3>
+
+<!-- Filters -->
+<form method="get" class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="Search" class="form-control form-control-sm" placeholder="Name or provider..." value="@search.Search" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Min Amount (R)</label>
+                <input type="number" name="MinAmount" class="form-control form-control-sm" placeholder="0" value="@search.MinAmount" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Max Amount (R)</label>
+                <input type="number" name="MaxAmount" class="form-control form-control-sm" placeholder="Any" value="@search.MaxAmount" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Deadline</label>
+                <select name="DeadlineFilter" class="form-select form-select-sm">
+                    <option value="">Any</option>
+                    <option value="7days"  selected="@(search.DeadlineFilter=="7days")">Next 7 days</option>
+                    <option value="30days" selected="@(search.DeadlineFilter=="30days")">Next 30 days</option>
+                    <option value="more30" selected="@(search.DeadlineFilter=="more30")">30+ days</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Sort By</label>
+                <select name="SortBy" class="form-select form-select-sm">
+                    <option value="deadline" selected="@(search.SortBy=="deadline")">Deadline</option>
+                    <option value="amount"   selected="@(search.SortBy=="amount")">Amount</option>
+                    <option value="provider" selected="@(search.SortBy=="provider")">Provider</option>
+                    <option value="date"     selected="@(search.SortBy=="date")">Date Added</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Cards -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-4">
+    @foreach (var b in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge @(b.DaysUntilDeadline == 0 ? "bg-danger" : b.DaysUntilDeadline <= 7 ? "bg-warning text-dark" : "bg-success")">
+                            @(b.DaysUntilDeadline == 0 ? "Closed" : b.DaysUntilDeadline <= 7 ? $"{b.DaysUntilDeadline}d left" : "Active")
+                        </span>
+                        @if (b.IsScraped)
+                        {
+                            <span class="badge bg-light text-muted border"><i class="bi bi-robot me-1"></i>Auto-found</span>
+                        }
+                    </div>
+                    <h5 class="card-title mt-2 mb-1">@b.Name</h5>
+                    <p class="text-muted small mb-2"><i class="bi bi-building me-1"></i>@b.Provider</p>
+                    <p class="fw-bold text-success fs-5 mb-1">R @b.Amount.ToString("N0")</p>
+                    <p class="small text-muted mb-0"><i class="bi bi-calendar-event me-1"></i>Deadline: @b.ApplicationDeadline.ToString("dd MMM yyyy")</p>
+                    <p class="card-text small mt-2 text-truncate-2">@b.Description</p>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex gap-2">
+                    <a class="btn btn-outline-primary btn-sm" asp-action="Details" asp-route-id="@b.BursaryId">Details</a>
+                    @if (User.Identity?.IsAuthenticated == true && !b.IsDeadlinePassed)
+                    {
+                        @if (applied.Contains(b.BursaryId))
+                        {
+                            <button class="btn btn-sm btn-success" disabled><i class="bi bi-check me-1"></i>Applied</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#applyModal" data-bursaryid="@b.BursaryId" data-bursaryname="@b.Name">
+                                Apply Now
+                            </button>
+                        }
+                    }
+                    else if (User.Identity?.IsAuthenticated != true && !b.IsDeadlinePassed)
+                    {
+                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Login">Login to Apply</a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-search fs-1"></i>
+        <p class="mt-2">No bursaries match your search. Try adjusting your filters.</p>
+    </div>
+}
+
+<!-- Pagination -->
+@if (pages > 1)
+{
+    <nav>
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= pages; i++)
+            {
+                <li class="page-item @(i == search.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                       asp-route-search="@search.Search" asp-route-sortBy="@search.SortBy">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-controller="Bursary" asp-action="Apply">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="BursaryId" id="modalBursaryId" />
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-send me-2"></i>Apply for <span id="modalBursaryName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label fw-semibold">Why are you applying? <span class="text-muted fw-normal">(optional, max 500 chars)</span></label>
+                    <textarea name="ApplicationNotes" class="form-control" rows="4" maxlength="500"
+                              placeholder="Briefly describe why you are a good fit..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('applyModal').addEventListener('show.bs.modal', function(e) {
+    const btn = e.relatedTarget;
+    document.getElementById('modalBursaryId').value   = btn.dataset.bursaryid;
+    document.getElementById('modalBursaryName').textContent = btn.dataset.bursaryname;
+});
+</script>
+}

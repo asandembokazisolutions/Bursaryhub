@@ -1,0 +1,82 @@
+@model IEnumerable<BursaryHub.Models.BursaryApplication>
+@{ ViewData["Title"] = "My Applications"; }
+
+<h3 class="fw-bold mb-3"><i class="bi bi-send me-2 text-primary"></i>My Applications (@ViewBag.Total)</h3>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>You haven't applied for any bursaries yet. <a asp-controller="Bursary" asp-action="Index">Browse bursaries</a> to get started.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        @foreach (var app in Model)
+        {
+            <div class="col">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">@app.Bursary.Name</h5>
+                            <span class="badge @(
+                                app.Status == "Approved" ? "bg-success" :
+                                app.Status == "Rejected" ? "bg-danger" :
+                                app.Status == "Withdrawn" ? "bg-secondary" :
+                                "bg-warning text-dark")">
+                                @app.Status
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-2"><i class="bi bi-building me-1"></i>@app.Bursary.Provider</p>
+                        <p class="fw-bold text-success mb-3">R @app.Bursary.Amount.ToString("N0")</p>
+
+                        <dl class="small mb-0">
+                            <dt class="text-muted">Applied</dt><dd class="mb-2">@app.ApplicationDate.ToString("dd MMM yyyy HH:mm")</dd>
+                            @if (app.ReviewedDate.HasValue)
+                            {
+                                <dt class="text-muted">Reviewed</dt><dd class="mb-2">@app.ReviewedDate.Value.ToString("dd MMM yyyy")</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(app.ApplicationNotes))
+                            {
+                                <dt class="text-muted">Your Notes</dt><dd class="mb-2">@app.ApplicationNotes</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(app.ReviewNotes))
+                            {
+                                <dt class="text-muted">Reviewer Notes</dt><dd class="mb-2">@app.ReviewNotes</dd>
+                            }
+                        </dl>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <a class="btn btn-sm btn-outline-primary" asp-controller="Bursary" asp-action="Details" asp-route-id="@app.Bursary.BursaryId">
+                            <i class="bi bi-eye me-1"></i>View Bursary
+                        </a>
+                        @if (app.Status == "Pending")
+                        {
+                            <form method="post" asp-action="WithdrawApplication" asp-route-id="@app.ApplicationId" class="d-inline"
+                                  onsubmit="return confirm('Withdraw your application?')">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle me-1"></i>Withdraw</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@{
+    int page = (int)ViewBag.Page, pageSize = (int)ViewBag.PageSize, total = (int)ViewBag.Total;
+    int pages = (int)Math.Ceiling((double)total / pageSize);
+}
+@if (pages > 1)
+{
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= pages; i++)
+            {
+                <li class="page-item @(i == page ? "active" : "")">
+                    <a class="page-link" asp-action="MyApplications" asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

@@ -1,0 +1,94 @@
+@model BursaryHub.Models.User
+@{ ViewData["Title"] = $"{Model.FullName}'s Profile"; }
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Users">Users</a></li>
+        <li class="breadcrumb-item active">@Model.FullName</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-center py-4">
+                <i class="bi bi-person-circle text-primary" style="font-size:64px;"></i>
+                <h5 class="fw-bold mt-3">@Model.FullName</h5>
+                <p class="text-muted small">@Model.Email</p>
+                <span class="badge bg-primary mb-3 d-block">@Model.Role.RoleName</span>
+                <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
+                    @(Model.IsActive ? "Active" : "Inactive")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header fw-bold bg-light d-flex justify-content-between">
+                <span>Account Details</span>
+                <a class="btn btn-sm btn-outline-primary" asp-action="EditUser" asp-route-id="@Model.UserId">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">First Name</dt><dd class="col-sm-9">@Model.FirstName</dd>
+                    <dt class="col-sm-3">Last Name</dt><dd class="col-sm-9">@Model.LastName</dd>
+                    <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@Model.Email</dd>
+                    <dt class="col-sm-3">Phone</dt><dd class="col-sm-9">@(Model.PhoneNumber ?? "-")</dd>
+                    <dt class="col-sm-3">Role</dt><dd class="col-sm-9">@Model.Role.RoleName</dd>
+                    <dt class="col-sm-3">Email Verified</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge @(Model.IsEmailVerified ? "bg-success" : "bg-warning text-dark")">
+                            @(Model.IsEmailVerified ? "✓ Yes" : "✗ No")
+                        </span>
+                    </dd>
+                    <dt class="col-sm-3">Member Since</dt><dd class="col-sm-9">@Model.CreatedDate.ToString("dd MMMM yyyy")</dd>
+                    <dt class="col-sm-3">Last Login</dt>
+                    <dd class="col-sm-9">@(Model.LastLoginDate?.ToString("dd MMMM yyyy HH:mm") ?? "Never logged in")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header fw-bold bg-light">Applications (@Model.Applications.Count)</div>
+            <div class="card-body">
+                @if (!Model.Applications.Any())
+                {
+                    <p class="text-muted mb-0">No applications submitted.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Bursary</th><th>Date</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var app in Model.Applications.OrderByDescending(a => a.ApplicationDate).Take(10))
+                                {
+                                    <tr>
+                                        <td class="small">@app.Bursary.Name</td>
+                                        <td class="small text-muted">@app.ApplicationDate.ToString("dd MMM yyyy")</td>
+                                        <td>
+                                            <span class="badge @(
+                                                app.Status == "Approved" ? "bg-success" :
+                                                app.Status == "Rejected" ? "bg-danger" :
+                                                app.Status == "Withdrawn" ? "bg-secondary" :
+                                                "bg-warning text-dark")">
+                                                @app.Status
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

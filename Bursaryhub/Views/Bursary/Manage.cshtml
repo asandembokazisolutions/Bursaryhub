@@ -1,0 +1,78 @@
+@model IEnumerable<BursaryHub.Models.Bursary>
+@{ ViewData["Title"] = "Manage Bursaries"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold"><i class="bi bi-bookmark-star me-2 text-primary"></i>Manage Bursaries (@ViewBag.Total)</h3>
+    <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-circle me-1"></i>Add New Bursary</a>
+</div>
+
+<form method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control" placeholder="Search bursary name or provider..." value="@ViewBag.Search" />
+        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th><th>Provider</th><th>Amount</th>
+                    <th>Deadline</th><th>Applications</th><th>Status</th><th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@b.Name</td>
+                        <td>@b.Provider</td>
+                        <td class="text-success">R @b.Amount.ToString("N0")</td>
+                        <td class="small text-muted">@b.ApplicationDeadline.ToString("dd MMM yyyy")</td>
+                        <td><span class="badge bg-primary">@b.ApplicationCount</span></td>
+                        <td>
+                            <span class="badge @(b.IsActive ? "bg-success" : "bg-secondary")">
+                                @(b.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@b.BursaryId" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@b.BursaryId" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if (b.IsActive && User.IsInRole("Admin"))
+                            {
+                                <form method="post" asp-action="Delete" asp-route-id="@b.BursaryId" class="d-inline"
+                                      onsubmit="return confirm('Deactivate this bursary?')">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn btn-sm btn-outline-danger" title="Deactivate"><i class="bi bi-trash"></i></button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@{
+    int page = (int)ViewBag.Page, pageSize = (int)ViewBag.PageSize, total = (int)ViewBag.Total;
+    int pages = (int)Math.Ceiling((double)total / pageSize);
+}
+@if (pages > 1)
+{
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            @for (int i = 1; i <= pages; i++)
+            {
+                <li class="page-item @(i == page ? "active" : "")">
+                    <a class="page-link" asp-action="Manage" asp-route-page="@i" asp-route-search="@ViewBag.Search">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

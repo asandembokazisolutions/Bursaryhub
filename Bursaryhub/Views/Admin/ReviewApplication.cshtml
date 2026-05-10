@@ -1,0 +1,73 @@
+@model BursaryHub.Models.ViewModels.ReviewApplicationViewModel
+@{
+    ViewData["Title"] = "Review Application";
+    var app = (BursaryHub.Models.BursaryApplication)ViewBag.Application;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h3 class="fw-bold mb-4"><i class="bi bi-clipboard-check me-2 text-primary"></i>Review Application</h3>
+
+        <!-- Application Info -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header fw-bold bg-light">Application Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Student</dt><dd class="col-sm-9">@app.User.FullName (@app.User.Email)</dd>
+                    <dt class="col-sm-3">Bursary</dt><dd class="col-sm-9">@app.Bursary.Name</dd>
+                    <dt class="col-sm-3">Provider</dt><dd class="col-sm-9">@app.Bursary.Provider</dd>
+                    <dt class="col-sm-3">Amount</dt><dd class="col-sm-9 fw-bold text-success">R @app.Bursary.Amount.ToString("N0")</dd>
+                    <dt class="col-sm-3">Applied On</dt><dd class="col-sm-9">@app.ApplicationDate.ToString("dd MMM yyyy HH:mm")</dd>
+                    <dt class="col-sm-3">Student Notes</dt>
+                    <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(app.ApplicationNotes) ? "No notes provided." : app.ApplicationNotes)</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Review Form -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header fw-bold bg-light">Submit Review</div>
+            <div class="card-body">
+                <form method="post" asp-action="ReviewApplication">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="ApplicationId" type="hidden" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Decision <span class="text-danger">*</span></label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Decision" value="Approved" id="approve" />
+                                <label class="form-check-label text-success fw-semibold" for="approve">
+                                    <i class="bi bi-check-circle me-1"></i>Approve
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Decision" value="Rejected" id="reject" />
+                                <label class="form-check-label text-danger fw-semibold" for="reject">
+                                    <i class="bi bi-x-circle me-1"></i>Reject
+                                </label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="Decision" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ReviewNotes" class="form-label fw-semibold"></label>
+                        <textarea asp-for="ReviewNotes" class="form-control" rows="4"
+                                  placeholder="Optional notes for the student..."></textarea>
+                        <span asp-validation-for="ReviewNotes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>Submit Review
+                        </button>
+                        <a asp-action="Applications" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

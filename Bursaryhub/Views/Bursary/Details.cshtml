@@ -1,0 +1,106 @@
+@model BursaryHub.Models.Bursary
+@{
+    ViewData["Title"] = Model.Name;
+    bool alreadyApplied = (bool)ViewBag.AlreadyApplied;
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-action="Index">Browse Bursaries</a></li>
+                <li class="breadcrumb-item active">@Model.Name</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h2 class="fw-bold mb-1">@Model.Name</h2>
+                        <p class="text-muted mb-0"><i class="bi bi-building me-1"></i>@Model.Provider</p>
+                    </div>
+                    <span class="badge fs-6 @(Model.DaysUntilDeadline==0?"bg-danger":Model.DaysUntilDeadline<=7?"bg-warning text-dark":"bg-success")">
+                        @(Model.DaysUntilDeadline==0?"Closed":$"{Model.DaysUntilDeadline} days left")
+                    </span>
+                </div>
+
+                <h3 class="text-success fw-bold">R @Model.Amount.ToString("N0")</h3>
+
+                <hr/>
+
+                <h6 class="fw-bold">Description</h6>
+                <p>@Model.Description</p>
+
+                @if (!string.IsNullOrWhiteSpace(Model.EligibilityCriteria))
+                {
+                    <h6 class="fw-bold">Eligibility Criteria</h6>
+                    <p>@Model.EligibilityCriteria</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.ApplicationUrl))
+                {
+                    <h6 class="fw-bold">External Application</h6>
+                    <a href="@Model.ApplicationUrl" target="_blank" class="btn btn-outline-primary btn-sm" rel="noopener noreferrer">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Apply on Provider Website
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header fw-bold bg-light">Key Dates</div>
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt class="small text-muted">Application Deadline</dt>
+                    <dd class="fw-bold text-danger">@Model.ApplicationDeadline.ToString("dd MMMM yyyy")</dd>
+                    <dt class="small text-muted">Award Date</dt>
+                    <dd class="fw-bold">@Model.AwardDate.ToString("dd MMMM yyyy")</dd>
+                    <dt class="small text-muted">Applications Received</dt>
+                    <dd class="fw-bold">@Model.Applications.Count</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                @if (!Model.IsDeadlinePassed)
+                {
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @if (alreadyApplied)
+                        {
+                            <div class="alert alert-success mb-0"><i class="bi bi-check-circle me-2"></i>You have applied for this bursary.</div>
+                        }
+                        else
+                        {
+                            <form method="post" asp-controller="Bursary" asp-action="Apply">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="BursaryId" value="@Model.BursaryId" />
+                                <label class="form-label fw-semibold">Why are you applying? <span class="text-muted fw-normal small">(optional)</span></label>
+                                <textarea name="ApplicationNotes" class="form-control mb-3" rows="3" maxlength="500"></textarea>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-send me-1"></i>Apply Now
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary btn-lg w-100" asp-controller="Account" asp-action="Login">
+                            <i class="bi bi-person me-1"></i>Login to Apply
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-secondary mb-0"><i class="bi bi-calendar-x me-2"></i>Application deadline has passed.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
