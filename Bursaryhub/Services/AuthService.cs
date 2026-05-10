@@ -67,7 +67,7 @@ public class AuthService : IAuthService
             PasswordHash        = _hasher.Hash(password),
             RoleId              = 3,
             IsActive            = true,
-            IsEmailVerified     = false,
+            IsEmailVerified     = true,
             VerificationToken   = token,
             VerificationTokenExpiry = DateTime.UtcNow.AddHours(24),
             CreatedDate         = DateTime.UtcNow,
