@@ -106,11 +106,15 @@ app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 // ─── Seed Database ──────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); // ✅ added
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    db.Database.Migrate(); // ✅ moved here (correct place)
+    // Ensure the directory exists before migrating
+    var connString = db.Database.GetConnectionString();
+    var dataSource = connString?.Split('=').LastOrDefault()?.Trim();
+    if (!string.IsNullOrEmpty(dataSource))
+        Directory.CreateDirectory(Path.GetDirectoryName(dataSource)!);
 
-    await DbSeeder.SeedAdminAsync(scope.ServiceProvider); // ✅ fixed scope usage
+    db.Database.Migrate();
+    await DbSeeder.SeedAdminAsync(scope.ServiceProvider);
 }
-
 app.Run();
