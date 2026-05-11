@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BursaryHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260511095721_InitPostgres")]
+    [Migration("20260511100417_InitPostgres")]
     partial class InitPostgres
     {
         /// <inheritdoc />
@@ -138,7 +138,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
