@@ -38,8 +38,8 @@ else
     var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD")
         ?? throw new InvalidOperationException("DB_PASSWORD is not set.");
 
-    connStr = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;";
-
+    connStr = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;No Multiplexing=true;";
+    
     builder.Services.AddDbContext<ApplicationDbContext>(opts =>
         opts.UseNpgsql(connStr));
 }
