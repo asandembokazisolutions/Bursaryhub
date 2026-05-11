@@ -22,7 +22,7 @@ namespace BursaryHub.Migrations
                     RoleName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false)
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -41,8 +41,8 @@ namespace BursaryHub.Migrations
                     PasswordHash = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     PhoneNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsEmailVerified = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false),
                     VerificationToken = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     VerificationTokenExpiry = table.Column<DateTime>(type: "TEXT", nullable: true),
                     PasswordResetToken = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
@@ -80,8 +80,8 @@ namespace BursaryHub.Migrations
                     Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsScraped = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsScraped = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
