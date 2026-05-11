@@ -61,10 +61,25 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(b => b.CreatedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // ✅ Fix DateTime casting issue with PostgreSQL
+        // ✅ Fix type mismatches for PostgreSQL
         modelBuilder.Entity<Role>()
             .Property(r => r.CreatedDate)
             .HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Role>()
+            .Property(r => r.IsActive)
+            .HasColumnType("boolean");
+        modelBuilder.Entity<User>()
+            .Property(u => u.IsActive)
+            .HasColumnType("boolean");
+        modelBuilder.Entity<User>()
+            .Property(u => u.IsEmailVerified)
+            .HasColumnType("boolean");
+        modelBuilder.Entity<Bursary>()
+            .Property(b => b.IsActive)
+            .HasColumnType("boolean");
+        modelBuilder.Entity<Bursary>()
+            .Property(b => b.IsScraped)
+            .HasColumnType("boolean");
 
         // ─── Seed Roles ───────────────────────────────────────────────────
         modelBuilder.Entity<Role>().HasData(
