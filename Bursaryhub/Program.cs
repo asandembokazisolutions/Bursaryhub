@@ -16,11 +16,33 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // ─── Database ───────────────────────────────────────────────────────────────
-var connStr = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=bursaryhub.db;";
+string connStr;
 
-builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseSqlite(connStr)); // Change to UseSqlServer("Server=...") in production
+if (builder.Environment.IsDevelopment())
+{
+    // ✅ Local: SQLite — no secrets needed
+    connStr = "Data Source=bursaryhub.db;";
+    builder.Services.AddDbContext<ApplicationDbContext>(opts =>
+        opts.UseSqlite(connStr));
+}
+else
+{
+    // ✅ Production: PostgreSQL — built from individual env vars
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST")
+        ?? throw new InvalidOperationException("DB_HOST is not set.");
+    var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+    var dbName = Environment.GetEnvironmentVariable("DB_NAME")
+        ?? throw new InvalidOperationException("DB_NAME is not set.");
+    var dbUser = Environment.GetEnvironmentVariable("DB_USER")
+        ?? throw new InvalidOperationException("DB_USER is not set.");
+    var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD")
+        ?? throw new InvalidOperationException("DB_PASSWORD is not set.");
+
+    connStr = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;";
+
+    builder.Services.AddDbContext<ApplicationDbContext>(opts =>
+        opts.UseNpgsql(connStr));
+}
 
 // ─── Authentication ─────────────────────────────────────────────────────────
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -30,9 +52,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opts.LogoutPath = "/Account/Logout";
         opts.AccessDeniedPath = "/Account/AccessDenied";
         opts.ExpireTimeSpan = TimeSpan.FromMinutes(
-            int.Parse(builder.Configuration["Authentication:CookieExpirationMinutes"] ?? "30"));
+            int.Parse(Environment.GetEnvironmentVariable("COOKIE_EXPIRY_MINUTES") ?? "30"));
         opts.Cookie.HttpOnly = true;
-        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always; // HTTPS only
+        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         opts.Cookie.SameSite = SameSiteMode.Strict;
     });
 
@@ -46,7 +68,7 @@ builder.Services.AddHttpClient("Scraper")
     .ConfigureHttpClient(client =>
     {
         client.Timeout = TimeSpan.FromSeconds(
-            int.Parse(builder.Configuration["Scraper:Timeout"] ?? "30"));
+            int.Parse(Environment.GetEnvironmentVariable("SCRAPER_TIMEOUT") ?? "30"));
         client.DefaultRequestHeaders.Add("User-Agent",
             "BursaryHub/1.0 (+https://bursaryhub.example.com)");
     });
@@ -54,7 +76,7 @@ builder.Services.AddHttpClient("Scraper")
 // ─── MVC ────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
 
-// ─── CORS (if needed for future API) ────────────────────────────────────────
+// ─── CORS ───────────────────────────────────────────────────────────────────
 builder.Services.AddCors(opts =>
 {
     opts.AddPolicy("AllowSelf", p => p.WithOrigins("https://yourdomain.com")
@@ -71,8 +93,6 @@ builder.Services.AddHsts(opts =>
 var app = builder.Build();
 
 // ─── Middleware ─────────────────────────────────────────────────────────────
-
-// HTTPS Redirect (automatic with HSTS)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -86,7 +106,6 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Security Headers
 app.Use(async (ctx, next) =>
 {
     ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
@@ -106,15 +125,17 @@ app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 // ─── Seed Database ──────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    // Ensure the directory exists before migrating
-    var connString = db.Database.GetConnectionString();
-    var dataSource = connString?.Split('=').LastOrDefault()?.Trim();
-    if (!string.IsNullOrEmpty(dataSource))
-        Directory.CreateDirectory(Path.GetDirectoryName(dataSource)!);
-
-    db.Database.Migrate();
-    await DbSeeder.SeedAdminAsync(scope.ServiceProvider);
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+        await DbSeeder.SeedAdminAsync(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Database migration or seeding failed.");
+        throw;
+    }
 }
+
 app.Run();
