@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BursaryHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260510212908_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260511070050_InitPostgres")]
+    partial class InitPostgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
