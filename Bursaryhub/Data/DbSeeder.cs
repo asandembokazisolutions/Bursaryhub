@@ -1,44 +1,41 @@
 using BursaryHub.Models;
 using BursaryHub.Services;
 using Microsoft.EntityFrameworkCore;
-
+ 
 namespace BursaryHub.Data;
-
+ 
 public static class DbSeeder
 {
     public static async Task SeedAdminAsync(IServiceProvider services)
     {
-        using var scope = services.CreateScope();
-        var db      = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var hasher  = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-        var logger  = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
-
-        // Apply pending migrations
-        await db.Database.MigrateAsync();
-
-        var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@bursaryhub.com";
+        // NOTE: Do NOT call db.Database.MigrateAsync() here.
+        // Migration is handled in Program.cs before this method is called.
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        var hasher  = services.GetRequiredService<IPasswordHasher>();
+        var logger  = services.GetRequiredService<ILogger<ApplicationDbContext>>();
+ 
+        var adminEmail    = Environment.GetEnvironmentVariable("ADMIN_EMAIL")    ?? "admin@bursaryhub.com";
         var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "Admin@12345!";
-
+ 
         if (!await db.Users.AnyAsync(u => u.Email == adminEmail))
         {
             var admin = new User
             {
-                FirstName         = "Donda",
-                LastName          = "Administrator",
-                Email             = adminEmail,
-                PasswordHash      = hasher.Hash(adminPassword),
-                PhoneNumber       = "0612345678",
-                RoleId            = 1,          // Admin role
-                IsActive          = true,
-                IsEmailVerified   = true,       // pre-verified
-                CreatedDate       = DateTime.UtcNow,
+                FirstName       = "Donda",
+                LastName        = "Administrator",
+                Email           = adminEmail,
+                PasswordHash    = hasher.Hash(adminPassword),
+                PhoneNumber     = "0612345678",
+                RoleId          = 1,
+                IsActive        = true,
+                IsEmailVerified = true,
+                CreatedDate     = DateTime.UtcNow,
             };
             db.Users.Add(admin);
             await db.SaveChangesAsync();
             logger.LogInformation("✅ Seeded default admin account: {Email}", adminEmail);
         }
-
-        // Seed sample bursaries if none exist
+ 
         if (!await db.Bursaries.AnyAsync())
         {
             db.Bursaries.AddRange(
