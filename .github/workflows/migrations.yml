@@ -1,0 +1,47 @@
+name: Generate EF Migrations
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install EF Tools
+      run: dotnet tool install --global dotnet-ef
+
+    - name: Restore packages
+      run: dotnet restore ./Bursaryhub/Bursaryhub.csproj
+
+    - name: Delete old migrations
+      run: rm -rf ./Bursaryhub/Migrations
+
+    - name: Generate new migration
+      run: |
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        dotnet ef migrations add InitPostgres \
+          --project ./Bursaryhub/Bursaryhub.csproj \
+          --startup-project ./Bursaryhub/Bursaryhub.csproj \
+          -- --environment Development
+      env:
+        ASPNETCORE_ENVIRONMENT: Development
+
+    - name: Commit migrations
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add ./Bursaryhub/Migrations/
+        git diff --staged --quiet || git commit -m "Auto-generate EF migrations"
+        git push
