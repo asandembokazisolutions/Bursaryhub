@@ -3,6 +3,7 @@ using BursaryHub.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,6 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    // ✅ Production: PostgreSQL — built from individual env vars
     var dbHost = Environment.GetEnvironmentVariable("DB_HOST")
         ?? throw new InvalidOperationException("DB_HOST is not set.");
     var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
@@ -38,10 +38,14 @@ else
     var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD")
         ?? throw new InvalidOperationException("DB_PASSWORD is not set.");
 
-    connStr = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;No Multiplexing=true;";
-    
+    // ✅ Use NpgsqlDataSourceBuilder to disable multiplexing properly
+    var dataSourceBuilder = new NpgsqlDataSourceBuilder(
+        $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode=Require;Trust Server Certificate=true;");
+    dataSourceBuilder.UseLoggerFactory(LoggerFactory.Create(b => b.AddSerilog()));
+    var dataSource = dataSourceBuilder.Build();
+
     builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-        opts.UseNpgsql(connStr));
+        opts.UseNpgsql(dataSource));
 }
 
 // ─── Authentication ─────────────────────────────────────────────────────────
