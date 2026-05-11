@@ -13,7 +13,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<Bursary> Bursaries => Set<Bursary>();
     public DbSet<BursaryApplication> BursaryApplications => Set<BursaryApplication>();
 
-    // ✅ Suppress pending model changes warning
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.ConfigureWarnings(warnings =>
@@ -61,6 +60,11 @@ public class ApplicationDbContext : DbContext
             .WithMany(u => u.CreatedBursaries)
             .HasForeignKey(b => b.CreatedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // ✅ Fix DateTime casting issue with PostgreSQL
+        modelBuilder.Entity<Role>()
+            .Property(r => r.CreatedDate)
+            .HasColumnType("timestamp with time zone");
 
         // ─── Seed Roles ───────────────────────────────────────────────────
         modelBuilder.Entity<Role>().HasData(
