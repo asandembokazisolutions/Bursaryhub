@@ -1,5 +1,5 @@
-using MailKit.Net.Smtp;
-using MimeKit;
+using System.Text;
+using System.Text.Json;
 
 namespace BursaryHub.Services;
 
@@ -12,42 +12,48 @@ public interface IEmailService
 
 public class EmailService : IEmailService
 {
-    private readonly IConfiguration _config;
     private readonly ILogger<EmailService> _logger;
+    private readonly string _apiKey;
+    private readonly string _fromEmail;
+    private readonly string _fromName;
 
     public EmailService(IConfiguration config, ILogger<EmailService> logger)
     {
-        _config = config;
-        _logger = logger;
+        _logger    = logger;
+        _apiKey    = Environment.GetEnvironmentVariable("RESEND_API_KEY") ?? string.Empty;
+        _fromEmail = config["Email:SenderEmail"] ?? "onboarding@resend.dev";
+        _fromName  = config["Email:SenderName"]  ?? "BursaryHub";
     }
 
     private async Task SendAsync(string toEmail, string subject, string htmlBody)
     {
         try
         {
-            var smtpServer   = _config["Email:SmtpServer"]   ?? "smtp.gmail.com";
-            var smtpPort     = int.Parse(_config["Email:SmtpPort"] ?? "587");
-            var senderEmail  = _config["Email:SenderEmail"]  ?? "noreply@bursaryhub.com";
-            var senderPass   = _config["Email:SenderPassword"] ?? string.Empty;
-            var senderName   = _config["Email:SenderName"]   ?? "BursaryHub";
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
 
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(senderName, senderEmail));
-            message.To.Add(MailboxAddress.Parse(toEmail));
-            message.Subject = subject;
-            message.Body = new TextPart("html") { Text = htmlBody };
+            var payload = new
+            {
+                from    = $"{_fromName} <{_fromEmail}>",
+                to      = new[] { toEmail },
+                subject = subject,
+                html    = htmlBody
+            };
 
-            using var client = new SmtpClient();
-            await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync(senderEmail, senderPass);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            var json    = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await http.PostAsync("https://api.resend.com/emails", content);
 
-            _logger.LogInformation("Email sent to {Email}: {Subject}", toEmail, subject);
+            if (response.IsSuccessStatusCode)
+                _logger.LogInformation("Email sent to {Email}: {Subject}", toEmail, subject);
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Resend API error for {Email}: {Error}", toEmail, error);
+            }
         }
         catch (Exception ex)
         {
-            // Don't crash the app if email fails – just log
             _logger.LogError(ex, "Failed to send email to {Email}: {Subject}", toEmail, subject);
         }
     }
@@ -78,13 +84,13 @@ public class EmailService : IEmailService
 
     public Task SendApplicationDecisionAsync(string toEmail, string firstName, string bursaryName, string decision, string? notes)
     {
-        var color  = decision == "Approved" ? "#198754" : "#dc3545";
+        var color = decision == "Approved" ? "#198754" : "#dc3545";
         var html = $"""
             <h2>Application Update</h2>
             <p>Hi {firstName}, your application for <strong>{bursaryName}</strong> has been reviewed.</p>
             <p>Decision: <span style="color:{color};font-weight:bold;">{decision}</span></p>
             {(string.IsNullOrWhiteSpace(notes) ? "" : $"<p>Reviewer notes: {notes}</p>")}
-            <p>Log in to <a href="https://yourdomain.com">BursaryHub</a> for more details.</p>
+            <p>Log in to <a href="https://bursaryhub-1.onrender.com">BursaryHub</a> for more details.</p>
             <hr/><p style="color:#888;">BursaryHub Team</p>
             """;
         return SendAsync(toEmail, $"BursaryHub: Application {decision}", html);
