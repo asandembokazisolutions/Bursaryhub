@@ -27,7 +27,7 @@ public static class DbSeeder
                 PhoneNumber     = "0612345678",
                 RoleId          = 1,
                 IsActive        = true,
-                IsEmailVerified = true,
+                IsEmailVerified = false,
                 CreatedDate     = DateTime.UtcNow,
             };
             db.Users.Add(admin);
