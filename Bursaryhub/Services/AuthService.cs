@@ -19,7 +19,7 @@ public interface IAuthService
 
     Task<bool> VerifyEmailAsync(string token);
 
-    Task<(bool Success, string Message)> ForgotPasswordAsync(string email);
+    Task<(bool Success, string Message)> ForgotPasswordAsync(string email, HttpContext httpContext);
 
     Task<(bool Success, string Message)> ResetPasswordAsync(string token, string email, string newPassword);
 
@@ -56,21 +56,20 @@ public class AuthService : IAuthService
         if (await _db.Users.AnyAsync(u => u.Email == email))
             return (false, "Email already registered.");
 
-        // Default role = User (RoleId = 3)
         var token = Guid.NewGuid().ToString("N");
         var user = new User
         {
-            FirstName           = firstName.Trim(),
-            LastName            = lastName.Trim(),
-            Email               = email,
-            PhoneNumber         = phone.Trim(),
-            PasswordHash        = _hasher.Hash(password),
-            RoleId              = 3,
-            IsActive            = true,
-            IsEmailVerified     = true,
-            VerificationToken   = token,
+            FirstName               = firstName.Trim(),
+            LastName                = lastName.Trim(),
+            Email                   = email,
+            PhoneNumber             = phone.Trim(),
+            PasswordHash            = _hasher.Hash(password),
+            RoleId                  = 3,
+            IsActive                = true,
+            IsEmailVerified         = false, // ✅ requires email verification
+            VerificationToken       = token,
             VerificationTokenExpiry = DateTime.UtcNow.AddHours(24),
-            CreatedDate         = DateTime.UtcNow,
+            CreatedDate             = DateTime.UtcNow,
         };
 
         _db.Users.Add(user);
@@ -99,7 +98,6 @@ public class AuthService : IAuthService
             return (false, "Invalid email or password.");
         }
 
-        // Lockout check
         if (user.IsLockedOut)
         {
             _logger.LogWarning("Locked account login attempt: {Email} IP:{IP}", email, ipAddress);
@@ -125,7 +123,6 @@ public class AuthService : IAuthService
             return (false, "Invalid email or password.");
         }
 
-        // Success
         user.FailedLoginAttempts = 0;
         user.LockoutEndDate      = null;
         user.LastLoginDate       = DateTime.UtcNow;
@@ -143,8 +140,8 @@ public class AuthService : IAuthService
         var principal = new ClaimsPrincipal(identity);
         var props     = new AuthenticationProperties
         {
-            IsPersistent    = rememberMe,
-            ExpiresUtc      = DateTimeOffset.UtcNow.AddMinutes(
+            IsPersistent = rememberMe,
+            ExpiresUtc   = DateTimeOffset.UtcNow.AddMinutes(
                 rememberMe ? 10080 : int.Parse(_config["Authentication:CookieExpirationMinutes"] ?? "30")),
         };
 
@@ -166,19 +163,18 @@ public class AuthService : IAuthService
 
         if (user == null) return false;
 
-        user.IsEmailVerified     = true;
-        user.VerificationToken   = null;
+        user.IsEmailVerified        = true;
+        user.VerificationToken      = null;
         user.VerificationTokenExpiry = null;
         await _db.SaveChangesAsync();
         return true;
     }
 
-    public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email)
+    public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email, HttpContext httpContext)
     {
         email = email.ToLowerInvariant().Trim();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
 
-        // Always return the same message to prevent email enumeration
         const string msg = "If an account with that email exists, a reset link has been sent.";
         if (user == null) return (true, msg);
 
@@ -187,8 +183,7 @@ public class AuthService : IAuthService
         user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
         await _db.SaveChangesAsync();
 
-        // NOTE: In real deployment replace domain placeholder
-        var resetUrl = $"https://yourdomain.com/Account/ResetPassword?token={token}&email={email}";
+        var resetUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/Account/ResetPassword?token={token}&email={Uri.EscapeDataString(email)}";
         await _email.SendPasswordResetAsync(email, user.FirstName, resetUrl);
 
         return (true, msg);
