@@ -93,6 +93,18 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<User>()
             .Property(u => u.IsEmailVerified)
             .HasColumnType("boolean");
+        modelBuilder.Entity<User>()
+            .Property(u => u.VerificationTokenExpiry)
+            .HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<User>()
+            .Property(u => u.PasswordResetTokenExpiry)
+            .HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<User>()
+            .Property(u => u.LastLoginDate)
+            .HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<User>()
+            .Property(u => u.LockoutEndDate)
+            .HasColumnType("timestamp with time zone");
 
         modelBuilder.Entity<Bursary>()
             .Property(b => b.CreatedDate)
