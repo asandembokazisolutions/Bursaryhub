@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BursaryHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260512005257_InitPostgres")]
+    [Migration("20260512011722_InitPostgres")]
     partial class InitPostgres
     {
         /// <inheritdoc />
@@ -216,7 +216,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLoginDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -224,7 +224,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LockoutEndDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -236,7 +236,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("PasswordResetTokenExpiry")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(50)
@@ -250,7 +250,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("VerificationTokenExpiry")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("UserId");
 

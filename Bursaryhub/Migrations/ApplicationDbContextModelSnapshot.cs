@@ -213,7 +213,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLoginDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -221,7 +221,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LockoutEndDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -233,7 +233,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("PasswordResetTokenExpiry")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(50)
@@ -247,7 +247,7 @@ namespace BursaryHub.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("VerificationTokenExpiry")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("UserId");
 

@@ -44,12 +44,12 @@ namespace BursaryHub.Migrations
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false),
                     VerificationToken = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    VerificationTokenExpiry = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    VerificationTokenExpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     PasswordResetToken = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    PasswordResetTokenExpiry = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    LastLoginDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    PasswordResetTokenExpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LastLoginDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     FailedLoginAttempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    LockoutEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LockoutEndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     RoleId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
