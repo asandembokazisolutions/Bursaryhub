@@ -1,107 +1,115 @@
 using BursaryHub.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
- 
+
 namespace BursaryHub.Data;
- 
+
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
- 
+
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Bursary> Bursaries => Set<Bursary>();
     public DbSet<BursaryApplication> BursaryApplications => Set<BursaryApplication>();
- 
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.ConfigureWarnings(warnings =>
             warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
     }
- 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
- 
-        // ─── Identity / Auto-increment PKs (required for PostgreSQL) ──────────
-        // SQLite handles INTEGER PRIMARY KEY implicitly; PostgreSQL needs IDENTITY.
+
+        // ─── Identity / Auto-increment PKs ───────────────────────────────────
         modelBuilder.Entity<User>()
             .Property(u => u.UserId)
             .UseIdentityByDefaultColumn();
- 
+
         modelBuilder.Entity<Bursary>()
             .Property(b => b.BursaryId)
             .UseIdentityByDefaultColumn();
- 
+
         modelBuilder.Entity<BursaryApplication>()
             .Property(a => a.ApplicationId)
             .UseIdentityByDefaultColumn();
- 
+
         // ─── Indexes ──────────────────────────────────────────────────────────
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
- 
+
         modelBuilder.Entity<BursaryApplication>()
             .HasIndex(a => new { a.UserId, a.BursaryId })
             .IsUnique();
- 
+
         // ─── Relationships ────────────────────────────────────────────────────
         modelBuilder.Entity<User>()
             .HasOne(u => u.Role)
             .WithMany(r => r.Users)
             .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
- 
+
         modelBuilder.Entity<BursaryApplication>()
             .HasOne(a => a.User)
             .WithMany(u => u.Applications)
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
- 
+
         modelBuilder.Entity<BursaryApplication>()
             .HasOne(a => a.Bursary)
             .WithMany(b => b.Applications)
             .HasForeignKey(a => a.BursaryId)
             .OnDelete(DeleteBehavior.Cascade);
- 
+
         modelBuilder.Entity<BursaryApplication>()
             .HasOne(a => a.ReviewedByUser)
             .WithMany()
             .HasForeignKey(a => a.ReviewedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
- 
+
         modelBuilder.Entity<Bursary>()
             .HasOne(b => b.CreatedByUser)
             .WithMany(u => u.CreatedBursaries)
             .HasForeignKey(b => b.CreatedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
- 
+
         // ─── Column type fixes for PostgreSQL ────────────────────────────────
         modelBuilder.Entity<Role>()
             .Property(r => r.CreatedDate)
             .HasColumnType("timestamp with time zone");
- 
         modelBuilder.Entity<Role>()
             .Property(r => r.IsActive)
             .HasColumnType("boolean");
- 
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.CreatedDate)
+            .HasColumnType("timestamp with time zone");
         modelBuilder.Entity<User>()
             .Property(u => u.IsActive)
             .HasColumnType("boolean");
- 
         modelBuilder.Entity<User>()
             .Property(u => u.IsEmailVerified)
             .HasColumnType("boolean");
- 
+
+        modelBuilder.Entity<Bursary>()
+            .Property(b => b.CreatedDate)
+            .HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Bursary>()
+            .Property(b => b.ApplicationDeadline)
+            .HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Bursary>()
+            .Property(b => b.AwardDate)
+            .HasColumnType("timestamp with time zone");
         modelBuilder.Entity<Bursary>()
             .Property(b => b.IsActive)
             .HasColumnType("boolean");
- 
         modelBuilder.Entity<Bursary>()
             .Property(b => b.IsScraped)
             .HasColumnType("boolean");
- 
+
         // ─── Seed Roles ───────────────────────────────────────────────────────
         modelBuilder.Entity<Role>().HasData(
             new Role { RoleId = 1, RoleName = "Admin",     Description = "Full system access – manages users, bursaries, and roles.",          CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), IsActive = true },
