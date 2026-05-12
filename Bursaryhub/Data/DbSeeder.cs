@@ -8,7 +8,6 @@ public static class DbSeeder
 {
     public static async Task SeedAdminAsync(IServiceProvider services)
     {
-        // NOTE: Do NOT call db.Database.MigrateAsync() here.
         // Migration is handled in Program.cs before this method is called.
         var db = services.GetRequiredService<ApplicationDbContext>();
         var hasher  = services.GetRequiredService<IPasswordHasher>();
