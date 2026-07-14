@@ -1,11 +1,19 @@
 :root {
-    --primary: #0d6efd;
-    --success: #198754;
-    --danger: #dc3545;
-    --warning: #ffc107;
-    --info: #0dcaf0;
-    --light: #f8f9fa;
-    --dark: #212529;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #eab308;
+    --info: #06b6d4;
+    --light: #f1f5f9;
+    --dark: #1e1e2e;
+
+    --bg-body: #1e1e2e;
+    --bg-surface: #252536;
+    --bg-surface-alt: #2a2a3d;
+    --border-subtle: #3a3a4d;
+    --text-primary: #e2e2f0;
+    --text-muted: #9494ad;
 }
 
 * {
@@ -16,8 +24,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -29,19 +37,30 @@ main {
 
 footer {
     margin-top: auto;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--border-subtle);
+    background-color: var(--bg-surface);
 }
 
 /* ── Forms ────────────────────────────────────────────────────────────────── */
 .form-label {
     margin-bottom: 0.5rem;
     font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--bg-surface-alt);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
 }
 
 .form-control:focus,
 .form-select:focus {
+    background-color: var(--bg-surface-alt);
+    color: var(--text-primary);
     border-color: var(--primary);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
 }
 
 .form-check-input:checked {
@@ -51,14 +70,15 @@ footer {
 
 /* ── Cards ────────────────────────────────────────────────────────────────── */
 .card {
-    border: none;
+    border: 1px solid var(--border-subtle);
     border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    background-color: var(--bg-surface);
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.25);
 }
 
 .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+    background-color: var(--bg-surface-alt);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
@@ -70,7 +90,7 @@ footer {
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.35);
 }
 
 .btn-primary {
@@ -79,8 +99,8 @@ footer {
 }
 
 .btn-primary:hover {
-    background-color: #0b5ed7;
-    border-color: #0b5ed7;
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 
 /* ── Badges ───────────────────────────────────────────────────────────────── */
@@ -95,32 +115,39 @@ footer {
     font-size: 1.25rem;
 }
 
+.navbar-dark {
+    background-color: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
 .navbar-dark .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-muted);
 }
 
 .navbar-dark .navbar-nav .nav-link:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 .table {
     margin-bottom: 0;
+    color: var(--text-primary);
 }
 
 .table thead th {
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.875rem;
-    border-bottom: 2px solid #e9ecef;
+    border-bottom: 2px solid var(--border-subtle);
+    color: var(--text-muted);
 }
 
 .table tbody tr {
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .table tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: var(--bg-surface-alt);
 }
 
 /* ── Alerts ───────────────────────────────────────────────────────────────── */
@@ -131,29 +158,31 @@ footer {
 }
 
 .alert-success {
-    background-color: #d1e7dd;
-    color: #0f5132;
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
 }
 
 .alert-danger {
-    background-color: #f8d7da;
-    color: #842029;
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    color: #664d03;
+    background-color: rgba(234, 179, 8, 0.15);
+    color: #facc15;
 }
 
 .alert-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
+    background-color: rgba(6, 182, 212, 0.15);
+    color: #22d3ee;
 }
 
 /* ── Modals ───────────────────────────────────────────────────────────────── */
 .modal-content {
-    border: none;
+    border: 1px solid var(--border-subtle);
     border-radius: 0.5rem;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
 }
 
 /* ── Breadcrumbs ──────────────────────────────────────────────────────────── */
@@ -164,7 +193,7 @@ footer {
 }
 
 .breadcrumb-item.active {
-    color: #666;
+    color: var(--text-muted);
 }
 
 /* ── Pagination ───────────────────────────────────────────────────────────── */
@@ -173,19 +202,21 @@ footer {
 }
 
 .page-link {
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-surface-alt);
     color: var(--primary);
     border-radius: 0.25rem;
 }
 
 .page-link:hover {
-    background-color: #e9ecef;
-    color: #0b5ed7;
+    background-color: var(--bg-surface);
+    color: var(--primary-hover);
 }
 
 .page-item.active .page-link {
     background-color: var(--primary);
     border-color: var(--primary);
+    color: #fff;
 }
 
 /* ── Text Utilities ───────────────────────────────────────────────────────── */
@@ -214,6 +245,12 @@ img {
     z-index: 3;
 }
 
+.input-group-text {
+    background-color: var(--bg-surface-alt);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+}
+
 /* ── Links ───────────────────────────────────────────────────────────────── */
 a {
     color: var(--primary);
@@ -222,7 +259,7 @@ a {
 }
 
 a:hover {
-    color: #0b5ed7;
+    color: var(--primary-hover);
     text-decoration: underline;
 }
 
